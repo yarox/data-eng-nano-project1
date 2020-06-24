@@ -14,8 +14,8 @@ songplay_table_create = ("""
         start_time BIGINT NOT NULL REFERENCES time(start_time) ON DELETE CASCADE,
         user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
         level TEXT NOT NULL,
-        song_id TEXT NOT NULL REFERENCES songs(song_id) ON DELETE CASCADE,
-        artist_id TEXT NOT NULL REFERENCES artists(artist_id) ON DELETE CASCADE,
+        song_id TEXT REFERENCES songs(song_id) ON DELETE CASCADE,
+        artist_id TEXT REFERENCES artists(artist_id) ON DELETE CASCADE,
         session_id INT NOT NULL,
         location TEXT NOT NULL,
         user_agent TEXT NOT NULL
