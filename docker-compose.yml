@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+    postgres:
+        build:
+            context: .
+            dockerfile: ./services/postgres/docker/Dockerfile
+        environment:
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_USER: postgres
+        ports:
+            - 5432:5432
+        volumes:
+            - ./services/postgres/config/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    jupyter:
+        build:
+            context: .
+            dockerfile: ./services/jupyter/docker/Dockerfile
+        environment:
+            JUPYTER_ENABLE_LAB: 1
+        ports:
+            - 8888:8888
+        volumes:
+            - ./services/jupyter/src/:/home/jovyan/work/
+            - ./data/:/home/jovyan/work/data/
