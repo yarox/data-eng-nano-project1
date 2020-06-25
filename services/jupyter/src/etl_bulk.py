@@ -9,6 +9,9 @@ import os
 from sql_queries import *
 
 
+SONGPLAY_CACHE = {}
+
+
 def get_files(filepath):
     glob_path = os.path.join(filepath,'**/*.json')
     return glob.glob(glob_path, recursive=True)
@@ -25,8 +28,13 @@ def concat_files(files):
 
 
 def get_songplay_extra(row, cur):
+    key = (row.song, row.artist, row.length)
+
+    if key in SONGPLAY_CACHE:
+        return SONGPLAY_CACHE[key]
+
     # get song_id and artist_id from song and artist tables
-    cur.execute(song_select, (row.song, row.artist, row.length))
+    cur.execute(songplay_extra_select, (row.song, row.artist, row.length))
     result = cur.fetchone()
 
     if result:
@@ -34,7 +42,9 @@ def get_songplay_extra(row, cur):
     else:
         song_id, artist_id = None, None
 
-    return { 'songId': song_id, 'artistId': artist_id }
+    SONGPLAY_CACHE[key] = { 'songId': song_id, 'artistId': artist_id }
+
+    return SONGPLAY_CACHE[key]
 
 
 def bulk_insert(cur, data, table, unique_column=None, table_columns=None):
@@ -108,6 +118,8 @@ def process_log_files(cur, files):
     bulk_insert(cur, user_data, 'users', 'userId')
 
     # insert songplay records
+    cur.execute(materialized_table_create)
+
     songplay_extra = df.apply(get_songplay_extra, axis=1, result_type='expand', cur=cur)
     df = pd.concat([df, songplay_extra], axis=1)
 
@@ -119,6 +131,7 @@ def process_log_files(cur, files):
         'session_id', 'location', 'user_agent']
 
     bulk_insert(cur, songplay_data, 'songplays', table_columns=table_columns)
+    cur.execute(materialized_table_drop)
 
 
 def process_data(cur, conn, filepath, func):

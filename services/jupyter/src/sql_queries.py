@@ -1,5 +1,6 @@
 # DROP TABLES
 
+materialized_table_drop = 'DROP MATERIALIZED VIEW songplay_extra;'
 any_temp_table_drop = 'DROP TABLE IF EXISTS temp_{table};'
 songplay_table_drop = 'DROP TABLE IF EXISTS songplays;'
 user_table_drop = 'DROP TABLE IF EXISTS users;'
@@ -8,6 +9,19 @@ artist_table_drop = 'DROP TABLE IF EXISTS artists;'
 time_table_drop = 'DROP TABLE IF EXISTS time;'
 
 # CREATE TABLES
+
+materialized_table_create = '''
+    CREATE MATERIALIZED VIEW songplay_extra
+    AS
+        SELECT
+            s.song_id,
+            a.artist_id,
+            s.title as song_title,
+            a.name as artist_name,
+            s.duration as song_duration
+        FROM songs s
+            JOIN artists a ON s.artist_id = a.artist_id;
+'''
 
 any_temp_table_create = '''
     CREATE TEMP TABLE IF NOT EXISTS temp_{table}
@@ -146,6 +160,17 @@ time_table_insert = '''
 '''
 
 # FIND SONGS
+
+songplay_extra_select = '''
+    SELECT
+        song_id,
+        artist_id
+    FROM songplay_extra
+    WHERE
+        song_title = %s AND
+        artist_name = %s AND
+        song_duration = %s;
+'''
 
 song_select = '''
     SELECT
